@@ -1,0 +1,17 @@
+{
+   "type": "postgres",
+   "host": "localhost",
+   "port": 5432,
+   "username": "postgres",
+   "password": "1234",
+   "database": "bancoLES",
+   "synchronize": true,
+   "logging": false,
+   "entities": ["src/entities/**/*.ts"],
+   "migrations": ["src/database/migration/**/*.ts"],
+   "cli": {
+     "entitiesDir": "src/entities",
+     "migrationsDir": "src/database/migration"
+   }
+ }
+ 
