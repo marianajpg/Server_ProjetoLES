@@ -4,8 +4,6 @@ import { Venda } from "../entities/Venda";
 import { VendaItem } from "../entities/VendaItem";
 import { StatusVenda } from "../entities/StatusVenda";
 import { Cupom } from "../entities/Cupom";
-import { LivroService } from "./LivroService";
-import { Cliente } from "../entities/Cliente";
 import { CupomRepository } from "../repositories/CupomRepository";
 import { LivroRepository } from "../repositories/LivroRepository";
 import { EstoqueService } from "./EstoqueService";
@@ -20,52 +18,62 @@ class VendaService {
 
   // Criação de venda com suporte a cupons
   async criarVenda(vendaData: Partial<Venda>, cupomCodigo?: string): Promise<Venda> {
-    // Valida estoque
-    const itensValidos = await this.validarEstoqueItens(vendaData.itens);
-    if (!itensValidos) {
-      throw new Error("Itens sem estoque disponível");
+    // Validate required fields
+    if (!vendaData.cliente || !vendaData.itens || vendaData.itens.length === 0) {
+        throw new Error("Dados da venda incompletos");
     }
 
-    // Calcula totais
+    // Validate stock
+    const itensValidos = await this.validarEstoqueItens(vendaData.itens);
+    if (!itensValidos) {
+        throw new Error("Itens sem estoque disponível");
+    }
+
+    // Calculate totals
     let total = await this.calcularTotalVenda(vendaData.itens);
     let desconto = 0;
     
-    // Aplica cupom se fornecido
+    // Apply coupon if provided
     let cupomUtilizado: Cupom | null = null;
     if (cupomCodigo) {
-      const resultadoValidacao = await this.validarEAplicarCupom(cupomCodigo, vendaData.cliente.id, total);
-      if (!resultadoValidacao.valido) {
-        throw new Error(resultadoValidacao.mensagem);
-      }
-      desconto = resultadoValidacao.cupom?.valor || 0;
-      total = resultadoValidacao.novoTotal;
-      cupomUtilizado = resultadoValidacao.cupom;
+        const resultadoValidacao = await this.validarEAplicarCupom(cupomCodigo, vendaData.cliente.id, total);
+        if (!resultadoValidacao.valido) {
+            throw new Error(resultadoValidacao.mensagem);
+        }
+        desconto = resultadoValidacao.cupom?.valor || 0;
+        total = resultadoValidacao.novoTotal;
+        cupomUtilizado = resultadoValidacao.cupom;
     }
 
-    // Cria a venda
+    // Create the sale
     const venda = await this.vendaRepository.createAndSave({
-      cliente: vendaData.cliente,
-      enderecoEntrega: vendaData.enderecoEntrega,
-      itens: vendaData.itens,
-      pagamentos: [],
-      trocas: [],
-      total,
-      descontoAplicado: desconto,
-      status: StatusVenda.EM_PROCESSAMENTO,
-      cupomUtilizado: cupomUtilizado
+        cliente: vendaData.cliente,
+        enderecoEntrega: vendaData.enderecoEntrega,
+        itens: vendaData.itens,
+        pagamentos: [],
+        trocas: [],
+        total,
+        descontoAplicado: desconto,
+        status: StatusVenda.EM_PROCESSAMENTO,
+        cupomUtilizado: cupomUtilizado
     });
-    
-    
 
-    // Reserva estoque
-    await this.reservarEstoque(vendaData.itens);
+    try {
+        // Reserve stock
+        await this.reservarEstoque(vendaData.itens);
 
-    // Marca cupom como utilizado
-    if (cupomUtilizado) {
-      await this.cupomRepository.marcarComoUtilizado(cupomUtilizado.id);
+        // Mark coupon as used
+        if (cupomUtilizado) {
+            await this.cupomRepository.marcarComoUtilizado(cupomUtilizado.id);
+        }
+
+        return venda;
+    } catch (error) {
+        // Rollback if something fails
+        await this.vendaRepository.delete(venda.id);
+        throw error;
     }
-
-    return venda;
+    return
 }
 
   // Valida e aplica cupom na venda

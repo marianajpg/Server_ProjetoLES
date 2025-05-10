@@ -6,7 +6,7 @@ import { Livro } from "../entities/Livros";
 
 export class EditoraController {
   // Consulta todas as editoras (simples)
-  async listarTodas(request: Request, response: Response) {
+  async findAll(request: Request, response: Response) {
     try {
       const editoraRepository = getRepository(Editora);
       const editoras = await editoraRepository.find({
@@ -20,7 +20,7 @@ export class EditoraController {
   }
 
   // Consulta editora por ID (com livros associados)
-  async buscarPorId(request: Request, response: Response) {
+  async findById(request: Request, response: Response) {
     try {
       const editoraRepository = getRepository(Editora);
       const editora = await editoraRepository.findOne(request.params.id, {

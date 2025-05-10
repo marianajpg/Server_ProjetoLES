@@ -73,18 +73,18 @@ export class LivroController {
   async findById(request: Request, response: Response) {
     const { id } = request.params;
     try {
-      const livro = await this.livroService.buscarLivros( { id });
-      if (!livro || livro.length === 0) {
+      const livro = await this.livroService.findById(id);
+      if (!livro) {
         return response.status(404).json({ message: "Livro não encontrado" });
       }
-      response.json(livro[0]);
+      response.json(livro);
     } catch (error: any) {
-      response.status(404).json({ 
+      response.status(500).json({ 
         message: error.message || "Erro ao buscar livro" 
       });
     }
   }
-
+  
   async update(request: Request, response: Response) {
     const { id } = request.params;
     const dadosAtualizados = request.body;

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ClienteRepository } from "../repositories/ClienteRepository";
 import { getCustomRepository } from "typeorm";
-//import { ColaboradorRepository } from "../repositories/ColaboradorRepository";
+import { ColaboradorRepository } from "../repositories/ColaboradorRepository";
 
 class VerifyTokenController {
   async handle(request: Request, response: Response) {
@@ -11,14 +11,15 @@ class VerifyTokenController {
       
       // Verifica se é cliente ou colaborador
       const clienteRepository = getCustomRepository(ClienteRepository);
-      //const colaboradorRepository = getCustomRepository(ColaboradorRepository);
+      const colaboradorRepository = getCustomRepository(ColaboradorRepository);
       
-      let user = await clienteRepository.findOne(userId);
-      let userType = 'cliente';
+      let user = await colaboradorRepository.findOne(userId);
+      let userType = 'colaborador';
       
       if (!user) {
-        //user = await colaboradorRepository.findOne(userId);
-        userType = 'colaborador';
+        user = await clienteRepository.findOne(userId);
+      
+        userType = 'cliente';
         
         if (!user) {
           return response.status(404).json({ error: "Usuário não encontrado" });

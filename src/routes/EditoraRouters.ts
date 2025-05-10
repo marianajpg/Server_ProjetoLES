@@ -6,8 +6,8 @@ const router = Router();
 const editoraController = new EditoraController();
 
 // Rotas de consulta
-router.get("/", editoraController.listarTodas.bind(editoraController));
-router.get("/:id", editoraController.buscarPorId.bind(editoraController));
+router.get("/", editoraController.findAll.bind(editoraController));
+router.get("/:id", editoraController.findById.bind(editoraController));
 router.get("/por-livro/:livroId", editoraController.buscarPorLivro.bind(editoraController));
 
 export default router;

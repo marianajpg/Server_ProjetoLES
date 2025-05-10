@@ -24,6 +24,10 @@ class LivroService {
     return this.repository.createAndSave(livroData);
   }
 
+  async findById(id: string): Promise<Livro | null> {
+    return this.repository.findById(id, ['autor', 'editora', 'categorias']);
+  }
+
   // RF0012: Inativar livros
   async inativarLivro(id: string, justificativa: string, categoria: string): Promise<Livro> {
     // RN0015: Valida justificativa e categoria para inativação manual

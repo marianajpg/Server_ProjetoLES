@@ -1,10 +1,21 @@
 // src/config/database.ts
-import { createConnection, Connection, Repository, ObjectType } from 'typeorm';
+import { createConnection, Connection, Repository, ObjectType, getConnectionManager } from 'typeorm';
 
 let connection: Connection;
 
-export async function initializeDB() {
+export async function initializeDB(): Promise<Connection> {
+  const connectionManager = getConnectionManager();
+  
+  if (connectionManager.has('default')) {
+    connection = connectionManager.get('default');
+    if (connection.isConnected) {
+      return connection;
+    }
+    return connection.connect();
+  }
+
   connection = await createConnection({
+    name: 'default',
     type: 'postgres',
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT || '5432'),
@@ -15,9 +26,18 @@ export async function initializeDB() {
     synchronize: true,
     logging: false
   });
+
+  return connection;
+}
+
+export function getConnection(): Connection {
+  const connectionManager = getConnectionManager();
+  if (!connectionManager.has('default')) {
+    throw new Error('Database not connected. Call initializeDB() first.');
+  }
+  return connectionManager.get('default');
 }
 
 export function getRepository<T>(entity: ObjectType<T>): Repository<T> {
-  if (!connection) throw new Error('Database not initialized');
-  return connection.getRepository(entity);
+  return getConnection().getRepository(entity);
 }

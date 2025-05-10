@@ -76,15 +76,21 @@ export class ClienteController {
 
   async update(request: Request, response: Response) {
     const { id } = request.params;
-    const dadosAtualizados = request.body;
-
+    const dadosAtualizados = { ...request.body };
+  
     try {
+      // Criptografar a senha, se ela estiver presente
+      if (dadosAtualizados.senha) {
+        dadosAtualizados.senha = await hash(dadosAtualizados.senha, 10);
+      }
+  
       const clienteAtualizado = await this.clienteService.update(id, dadosAtualizados);
-       response.json(clienteAtualizado);
+      response.json(clienteAtualizado);
     } catch (error: any) {
-       response.status(400).json({ message: error.message || "Erro ao atualizar cliente" });
+      response.status(400).json({ message: error.message || "Erro ao atualizar cliente" });
     }
   }
+  
 
   async delete(request: Request, response: Response) {
     const { id } = request.params;

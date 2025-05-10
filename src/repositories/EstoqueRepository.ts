@@ -40,7 +40,7 @@ class EstoqueRepository extends Repository<Estoque> {
     notaFiscal?: string
   ): Promise<Estoque> {
     return this.createAndSave({
-      livro: { id: livroId } as Livro,
+      livroId: { id: livroId } as Livro,
       fornecedor: { id: fornecedorId } as Fornecedor,
       quantidade,
       custoUnitario,
@@ -83,7 +83,7 @@ class EstoqueRepository extends Repository<Estoque> {
     custoUnitario: number,
   ): Promise<Estoque> {
     return this.createAndSave({
-      livro: { id: livroId } as Livro,
+      livroId: { id: livroId } as Livro,
       quantidade,
       custoUnitario,
       dataEntrada: new Date(),

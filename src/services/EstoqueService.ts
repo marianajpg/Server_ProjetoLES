@@ -13,7 +13,7 @@ class EstoqueService {
 
   // RF0051: Realizar entrada de itens no estoque
   async registrarEntrada(
-    livroId: string,
+    livro: string,
     fornecedorId: string,
     quantidade: number,
     custoUnitario: number,
@@ -25,12 +25,12 @@ class EstoqueService {
     if (custoUnitario <= 0) throw new Error("Custo unitário deve ser positivo");
 
     // Verifica se livro existe
-    const livro = await this.livroRepository.findById(livroId);
-    if (!livro) throw new Error("Livro não encontrado");
+    const livroExistente = await this.livroRepository.findById(livro);
+    if (!livroExistente) throw new Error("Livro não encontrado");
 
     // Registra entrada no estoque
     const entradaEstoque = await this.repository.registrarEntrada(
-      livroId,
+      livro,
       fornecedorId,
       quantidade,
       custoUnitario,
@@ -39,22 +39,22 @@ class EstoqueService {
     );
 
     // RF0052: Atualiza preço de venda se necessário
-    await this.atualizarPrecoVendaSeNecessario(livroId);
+    await this.atualizarPrecoVendaSeNecessario(livro);
 
     return entradaEstoque;
   }
 
   // RF0052: Calcular valor de venda com base no custo e grupo de precificação
-  private async atualizarPrecoVendaSeNecessario(livroId: string): Promise<void> {
-    const maiorCusto = await this.repository.getMaiorCustoUnitario(livroId);
+  private async atualizarPrecoVendaSeNecessario(livro: string): Promise<void> {
+    const maiorCusto = await this.repository.getMaiorCustoUnitario(livro);
     if (maiorCusto > 0) {
-      await this.livroService.atualizarPrecoBaseadoNoCusto(livroId, maiorCusto);
+      await this.livroService.atualizarPrecoBaseadoNoCusto(livro, maiorCusto);
     }
   }
 
   // RF0053: Dar baixa no estoque após venda
-  async darBaixaEstoque(livroId: string, quantidade: number): Promise<void> {
-    await this.repository.darBaixaEstoque(livroId, quantidade);
+  async darBaixaEstoque(livro: string, quantidade: number): Promise<void> {
+    await this.repository.darBaixaEstoque(livro, quantidade);
   }
 
   async darBaixaEstoqueVenda(itensVenda: VendaItem[]): Promise<void> {
@@ -82,31 +82,31 @@ class EstoqueService {
 
   // RF0054: Realizar reentrada de itens no estoque após troca
   async reentradaPorTroca(
-    livroId: string,
+    livro: string,
     quantidade: number,
   ): Promise<Estoque> {
     // RN005x: Usa o maior custo unitário como base para reentrada
-    const custoUnitario = await this.repository.getMaiorCustoUnitario(livroId) || 0;
+    const custoUnitario = await this.repository.getMaiorCustoUnitario(livro) || 0;
 
     return this.repository.reentradaEstoque(
-      livroId,
+      livro,
       quantidade,
       custoUnitario,
     );
   }
 
   // Métodos de consulta
-  async getQuantidadeDisponivel(livroId: string): Promise<number> {
-    return this.repository.getQuantidadeDisponivel(livroId);
+  async getQuantidadeDisponivel(livro: string): Promise<number> {
+    return this.repository.getQuantidadeDisponivel(livro);
   }
 
-  async verificarDisponibilidade(livroId: string, quantidadeDesejada: number): Promise<boolean> {
-    const disponivel = await this.getQuantidadeDisponivel(livroId);
+  async verificarDisponibilidade(livro: string, quantidadeDesejada: number): Promise<boolean> {
+    const disponivel = await this.getQuantidadeDisponivel(livro);
     return disponivel >= quantidadeDesejada;
   }
 
   async getHistoricoMovimentacoes(
-    livroId: string,
+    livro: string,
     periodo?: { inicio: Date, fim: Date }
   ): Promise<Estoque[]> {
     const padraoPeriodo = periodo || {
@@ -114,20 +114,20 @@ class EstoqueService {
       fim: new Date()
     };
 
-    return this.repository.findMovimentacoesPorPeriodo(livroId, padraoPeriodo);
+    return this.repository.findMovimentacoesPorPeriodo(livro, padraoPeriodo);
   }
 
   // Método para reservar estoque durante o processo de compra
-  async reservarEstoque(livroId: string, quantidade: number): Promise<boolean> {
-    const disponivel = await this.getQuantidadeDisponivel(livroId);
+  async reservarEstoque(livro: string, quantidade: number): Promise<boolean> {
+    const disponivel = await this.getQuantidadeDisponivel(livro);
     return disponivel >= quantidade;
   }
 
   // Método para liberar estoque se a compra não for concluída
-  async liberarReservaEstoque(livroId: string, quantidade: number): Promise<void> {
+  async liberarReservaEstoque(livro: string, quantidade: number): Promise<void> {
     // Em sistemas mais complexos, implementar lógica de reserva real
     // Aqui estamos apenas verificando a disponibilidade
-    await this.verificarDisponibilidade(livroId, quantidade);
+    await this.verificarDisponibilidade(livro, quantidade);
   }
 }
 

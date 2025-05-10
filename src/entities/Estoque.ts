@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable } from "typeorm";
+import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, PrimaryGeneratedColumn, ManyToOne, ManyToMany, JoinTable, JoinColumn } from "typeorm";
 import { v4 as uuid } from "uuid";
 import { Livro } from "./Livros";
 import { Fornecedor } from "./Fornecedor";
@@ -22,7 +22,8 @@ export class Estoque {
 
   // Relacionamentos
   @ManyToOne(() => Livro, livro => livro.estoque)
-  livro: Livro;
+  @JoinColumn({ name: 'livro_id' })
+  livroId: Livro;
 
   @ManyToOne(() => Fornecedor)
   fornecedor: Fornecedor; // RN0051

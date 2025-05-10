@@ -3,7 +3,7 @@ import "express-async-errors";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import cors from 'cors';
-
+import "reflect-metadata";
 
 createConnection()
   .then(async () => {

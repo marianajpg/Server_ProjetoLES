@@ -2,6 +2,7 @@ import { EntityRepository, Repository, getRepository } from "typeorm";
 import { Endereco } from "../entities/Endereco";
 import { Cliente } from "../entities/Cliente";
 
+
 @EntityRepository(Endereco)
 class EnderecoRepository extends Repository<Endereco> {
   // Métodos básicos de CRUD
@@ -29,7 +30,7 @@ class EnderecoRepository extends Repository<Endereco> {
   // Consultas específicas para endereços
   async findByCliente(clienteId: string): Promise<Endereco[]> {
     return this.find({ 
-      where: { cliente: clienteId },
+      where: { cliente: { id: clienteId } },
       relations: ['cliente']
     });
   }
@@ -37,7 +38,7 @@ class EnderecoRepository extends Repository<Endereco> {
   async findByTipo(clienteId: string, tipoEndereco: string): Promise<Endereco[]> {
     return this.find({ 
       where: { 
-        cliente: clienteId,
+        cliente: { id: clienteId },
         tipoEndereco 
       },
       relations: ['cliente']
@@ -45,36 +46,32 @@ class EnderecoRepository extends Repository<Endereco> {
   }
 
   async findEnderecoPadraoEntrega(clienteId: string): Promise<Endereco | null> {
-    const endereco = await this.createQueryBuilder("endereco")
+    return this.createQueryBuilder("endereco")
       .where("endereco.clienteId = :clienteId", { clienteId })
       .andWhere("endereco.tipoEndereco = :tipo", { tipo: 'ENTREGA' })
       .orderBy("endereco.created_at", "DESC")
       .getOne();
-  
-    return endereco;
   }
   
   async findEnderecoPadraoCobranca(clienteId: string): Promise<Endereco | null> {
-    const endereco = await this.createQueryBuilder("endereco")
+    return this.createQueryBuilder("endereco")
       .where("endereco.clienteId = :clienteId", { clienteId })
       .andWhere("endereco.tipoEndereco = :tipo", { tipo: 'COBRANCA' })
       .orderBy("endereco.created_at", "DESC")
       .getOne();
-  
-    return endereco;
   }
-  // Método para validar se um cliente tem pelo menos um endereço de cada tipo (RN0021, RN0022)
+
   async validateEnderecosCliente(clienteId: string): Promise<{ hasCobranca: boolean; hasEntrega: boolean }> {
     const cobrancaCount = await this.count({ 
       where: { 
-        cliente: clienteId,
+        cliente: { id: clienteId },
         tipoEndereco: 'COBRANCA' 
       } 
     });
     
     const entregaCount = await this.count({ 
       where: { 
-        cliente: clienteId,
+        cliente: { id: clienteId },
         tipoEndereco: 'ENTREGA' 
       } 
     });

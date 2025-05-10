@@ -93,7 +93,7 @@ export class Livro {
   })
   categorias: Categoria[]; // RN0012
 
-  @OneToMany(() => Estoque, estoque => estoque.livro)
+  @OneToMany(() => Estoque, estoque => estoque.livroId)
   estoque: Estoque[];
 
   @OneToMany(() => VendaItem, vendaItem => vendaItem.livro)
